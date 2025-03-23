@@ -30,12 +30,38 @@ def clean_text(text):
     text = re.sub(r'[^A-Z0-9]', '', text)  # Remove unwanted symbols
     return text  # Keep this simple for now
 
+# Function to detect number plate color
+def detect_plate_color(image):
+    avg_color_per_row = np.average(image, axis=0)
+    avg_color = np.average(avg_color_per_row, axis=0)
+
+    # Convert BGR to RGB
+    r, g, b = avg_color[2], avg_color[1], avg_color[0]
+
+    # Adjust thresholds for more accurate color detection
+    if r > 180 and g > 180 and b > 180:
+        return "White"
+    elif r > 180 and g < 120 and b < 120:
+        return "Red"
+    elif r < 120 and g > 180 and b < 120:
+        return "Green"
+    elif r < 120 and g < 120 and b > 180:
+        return "Blue"
+    elif r > 180 and g > 180 and b < 120:
+        return "Yellow"
+    else:
+        return "Unknown"
+
+
 # Process images in the folder
 for image_name in os.listdir(image_folder):
     image_path = os.path.join(image_folder, image_name)
 
     # Read image
     img = cv2.imread(image_path)
+
+    # Detect plate color
+    plate_color = detect_plate_color(img)
 
     # Resize for better OCR (scaling up)
     img = cv2.resize(img, None, fx=2, fy=2, interpolation=cv2.INTER_CUBIC)
@@ -68,3 +94,4 @@ for image_name in os.listdir(image_folder):
         cleaned_text = "DL" + cleaned_text[3:]  # Replace "IDL" with "DL"
 
     print(f"Extracted Text from {image_name}: {cleaned_text}")
+    print(f"Detected Plate Color: {plate_color}")
